@@ -1,9 +1,7 @@
 /* eslint-disable @typescript-eslint/camelcase */
 import * as cpp from 'child-process-promise';
 import * as child_process from 'child_process';
-import * as fs from 'fs-extra';
 import * as path from 'path';
-import * as sarif from 'sarif';
 import { SemVer } from 'semver';
 import { Readable } from 'stream';
 import { StringDecoder } from 'string_decoder';
@@ -18,11 +16,6 @@ import { assertNever } from './pure/helpers-pure';
 import { QueryMetadata, SortDirection } from './pure/interface-types';
 import { Logger, ProgressReporter } from './logging';
 import { CompilationMessage } from './pure/messages';
-
-/**
- * The version of the SARIF format that we are using.
- */
-const SARIF_FORMAT = 'sarifv2.1.0';
 
 /**
  * Flags to pass to all cli commands.
@@ -568,18 +561,13 @@ export class CodeQLCliServer implements Disposable {
     return await this.runJsonCodeQlCliCommand<DecodedBqrsChunk>(['bqrs', 'decode'], subcommandArgs, 'Reading bqrs data');
   }
 
-  async interpretBqrs(metadata: { kind: string; id: string }, resultsPath: string, interpretedResultsPath: string, sourceInfo?: SourceInfo): Promise<sarif.Log> {
+  async interpretBqrs(metadata: { kind: string; id: string }, format: string, additonalArgs: string[], resultsPath: string, interpretedResultsPath: string, sourceInfo?: SourceInfo): Promise<void> {
     const args = [
       `-t=kind=${metadata.kind}`,
       `-t=id=${metadata.id}`,
       '--output', interpretedResultsPath,
-      '--format', SARIF_FORMAT,
-      // TODO: This flag means that we don't group interpreted results
-      // by primary location. We may want to revisit whether we call
-      // interpretation with and without this flag, or do some
-      // grouping client-side.
-      '--no-group-results',
-    ];
+      '--format', format,
+    ].concat(additonalArgs);
     if (sourceInfo !== undefined) {
       args.push(
         '--source-archive', sourceInfo.sourceArchive,
@@ -588,18 +576,6 @@ export class CodeQLCliServer implements Disposable {
     }
     args.push(resultsPath);
     await this.runCodeQlCliCommand(['bqrs', 'interpret'], args, 'Interpreting query results');
-
-    let output: string;
-    try {
-      output = await fs.readFile(interpretedResultsPath, 'utf8');
-    } catch (err) {
-      throw new Error(`Reading output of interpretation failed: ${err.stderr || err}`);
-    }
-    try {
-      return JSON.parse(output) as sarif.Log;
-    } catch (err) {
-      throw new Error(`Parsing output of interpretation failed: ${err.stderr || err}`);
-    }
   }
 
 

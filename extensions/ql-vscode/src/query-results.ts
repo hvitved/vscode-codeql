@@ -10,6 +10,11 @@ import { RawResultsSortState, SortedResultSetInfo, DatabaseInfo, QueryMetadata, 
 import { QueryHistoryConfig } from './config';
 import { QueryHistoryItemOptions } from './query-history';
 
+/**
+ * The version of the SARIF format that we are using.
+ */
+const SARIF_FORMAT = 'sarifv2.1.0';
+
 export class CompletedQuery implements QueryWithResults {
   readonly time: string;
   readonly query: QueryInfo;
@@ -159,9 +164,9 @@ export function getQueryName(query: QueryInfo) {
 
 
 /**
- * Call cli command to interpret results.
+ * Call cli command to interpret SARIF results.
  */
-export async function interpretResults(
+export async function interpretSarifResults(
   server: cli.CodeQLCliServer,
   metadata: QueryMetadata | undefined,
   resultsPaths: ResultsPaths,
@@ -183,5 +188,64 @@ export async function interpretResults(
     // SARIF format does, so in the absence of one, we use a dummy id.
     id = 'dummy-id';
   }
-  return await server.interpretBqrs({ kind, id }, resultsPath, interpretedResultsPath, sourceInfo);
+  const additionalArgs = [
+    // TODO: This flag means that we don't group interpreted results
+    // by primary location. We may want to revisit whether we call
+    // interpretation with and without this flag, or do some
+    // grouping client-side.
+    '--no-group-results'
+  ];
+
+  await server.interpretBqrs({ kind, id }, SARIF_FORMAT, additionalArgs, resultsPath, interpretedResultsPath, sourceInfo);
+
+  let output: string;
+  try {
+    output = await fs.readFile(interpretedResultsPath, 'utf8');
+  } catch (err) {
+    throw new Error(`Reading output of interpretation failed: ${err.stderr || err}`);
+  }
+
+  try {
+    return JSON.parse(output) as sarif.Log;
+  } catch (err) {
+    throw new Error(`Parsing output of interpretation failed: ${err.stderr || err}`);
+  } 
+}
+
+
+/**
+ * Call cli command to interpret graph results.
+ */
+export async function interpretGraphResults(
+  server: cli.CodeQLCliServer,
+  metadata: QueryMetadata | undefined,
+  resultsPaths: ResultsPaths,
+  sourceInfo?: cli.SourceInfo
+): Promise<string> {
+  const { resultsPath, interpretedResultsPath } = resultsPaths;
+  if (await fs.pathExists(interpretedResultsPath)) {
+    return await fs.readFile(interpretedResultsPath, 'utf8');
+  }
+  if (metadata === undefined) {
+    throw new Error('Can\'t interpret results without query metadata');
+  }
+  let { kind, id } = metadata;
+  if (kind === undefined) {
+    throw new Error('Can\'t interpret results without query metadata including kind');
+  }
+  if (id === undefined) {
+    // Interpretation per se doesn't really require an id, but the
+    // SARIF format does, so in the absence of one, we use a dummy id.
+    id = 'dummy-id';
+  }
+
+  const additionalArgs = ['--dot-location-url-format', 'https://github.com/github/codeql-ruby/tree/main/ql/test{path}#L{start:line}']
+
+  await server.interpretBqrs({ kind, id }, 'dot', additionalArgs, resultsPath, interpretedResultsPath, sourceInfo);
+
+  try {
+    return await fs.readFile(path.join(interpretedResultsPath, id + '.dot'), 'utf8');
+  } catch (err) {
+    throw new Error(`Reading output of interpretation failed: ${err.stderr || err}`);
+  }
 }

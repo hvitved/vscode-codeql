@@ -8,15 +8,17 @@ import { RawResultSet, ResultRow, ResultSetSchema, Column, ResolvableLocationVal
 
 export const SELECT_TABLE_NAME = '#select';
 export const ALERTS_TABLE_NAME = 'alerts';
+export const GRAPH_TABLE_NAME = 'graph';
 
 export type RawTableResultSet = { t: 'RawResultSet' } & RawResultSet;
-export type PathTableResultSet = {
-  t: 'SarifResultSet';
+export type InterpretedResultSet<T> = {
+  t: 'InterpretedResultSet';
   readonly schema: ResultSetSchema;
   name: string;
-} & Interpretation;
+  interpretation: InterpretationT<T>
+};
 
-export type ResultSet = RawTableResultSet | PathTableResultSet;
+export type ResultSet = RawTableResultSet | InterpretedResultSet<sarif.Log | string>;
 
 /**
  * Only ever show this many rows in a raw result table.
@@ -43,7 +45,7 @@ export interface PreviousExecution {
   durationSeconds: number;
 }
 
-export interface Interpretation {
+export interface InterpretationT<T> {
   sourceLocationPrefix: string;
   numTruncatedResults: number;
   numTotalResults: number;
@@ -52,8 +54,10 @@ export interface Interpretation {
    * they appear in the sarif file.
    */
   sortState?: InterpretedResultsSortState;
-  sarif: sarif.Log;
+  data: T;
 }
+
+export type Interpretation = InterpretationT<sarif.Log | string>;
 
 export interface ResultsPaths {
   resultsPath: string;
@@ -336,8 +340,9 @@ export function getDefaultResultSetName(
   // Choose first available result set from the array
   return [
     ALERTS_TABLE_NAME,
+    GRAPH_TABLE_NAME,
     SELECT_TABLE_NAME,
-    resultSetNames[0],
+    resultSetNames[0]
   ].filter((resultSetName) => resultSetNames.includes(resultSetName))[0];
 }
 

@@ -5,7 +5,7 @@ import 'mocha';
 import 'sinon-chai';
 import * as Sinon from 'sinon';
 import * as chaiAsPromised from 'chai-as-promised';
-import { CompletedQuery, interpretResults } from '../../query-results';
+import { CompletedQuery, interpretSarifResults } from '../../query-results';
 import { QueryInfo, QueryWithResults, tmpDir } from '../../run-queries';
 import { QueryHistoryConfig } from '../../config';
 import { EvaluationResult, QueryResultType } from '../../pure/messages';
@@ -140,7 +140,7 @@ describe('CompletedQuery', () => {
     expect(completedQuery.interpolate('%t %q %d %s %%::%t %q %d %s %%')).to.eq('123 stu def failed %::123 stu def failed %');
   });
 
-  it('should interpretResults', async () => {
+  it('should interpretSarifResults', async () => {
     const spy = Sinon.mock();
     spy.returns('1234');
     const mockServer = {
@@ -154,7 +154,7 @@ describe('CompletedQuery', () => {
       kind: 'my-kind',
       id: 'my-id' as string | undefined
     };
-    const results1 = await interpretResults(
+    const results1 = await interpretSarifResults(
       mockServer,
       metadata,
       {
@@ -173,7 +173,7 @@ describe('CompletedQuery', () => {
     spy.reset();
     spy.returns('1234');
     delete metadata.id;
-    const results2 = await interpretResults(
+    const results2 = await interpretSarifResults(
       mockServer,
       metadata,
       {
@@ -192,7 +192,7 @@ describe('CompletedQuery', () => {
     fs.writeFileSync(interpretedResultsPath, JSON.stringify({
       a: 6
     }), 'utf8');
-    const results3 = await interpretResults(
+    const results3 = await interpretSarifResults(
       mockServer,
       metadata,
       {
