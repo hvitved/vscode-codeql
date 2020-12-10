@@ -1,37 +1,39 @@
 import * as React from 'react';
 import { ResultTableProps } from './result-table-utils';
 import { InterpretedResultSet, GraphInterpretationData } from '../pure/interface-types';
-import { Graphviz } from 'graphviz-react';
+import { graphviz } from 'd3-graphviz';
 
 export type GraphProps = ResultTableProps & { resultSet: InterpretedResultSet<GraphInterpretationData> };
+
+const className = 'vscode-codeql__result-tables-graph';
 
 export class Graph extends React.Component<GraphProps> {
   constructor(props: GraphProps) {
     super(props);
-    this.state = { expanded: {}, selectedPathNode: undefined };
   }
 
-  render(): JSX.Element {
+  public render = (): JSX.Element => {
+    return <div id={className} className={className} />;
+  };
+
+  public componentDidMount = () => {
+    this.renderGraph();
+  };
+
+  public componentDidUpdate = () => {
+    this.renderGraph();
+  };
+
+  private renderGraph = () => {
     const options = {
-      height: innerHeight,
-      width: innerWidth,
-      scale: 1,
-      tweenPrecision: 1,
-      engine: 'dot',
-      keyMode: 'title',
-      convertEqualSidedPolygons: false,
+      fit: true,
       fade: false,
       growEnteringEdges: false,
-      fit: true,
-      tweenPaths: false,
-      tweenShapes: false,
-      useWorker: false,
       zoom: true,
     };
 
-   return <Graphviz
-     dot={this.props.resultSet.interpretation.data.dot}
-     options={options}
-   />;
-  }
+    graphviz(`#${className}`)
+      .options(options)
+      .renderDot(this.props.resultSet.interpretation.data.dot);
+  };
 }
