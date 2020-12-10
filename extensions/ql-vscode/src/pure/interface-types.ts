@@ -15,7 +15,7 @@ export type InterpretedResultSet<T> = {
   t: 'InterpretedResultSet';
   readonly schema: ResultSetSchema;
   name: string;
-  interpretation: InterpretationT<T>
+  interpretation: InterpretationT<T>;
 };
 
 export type ResultSet = RawTableResultSet | InterpretedResultSet<InterpretationData>;

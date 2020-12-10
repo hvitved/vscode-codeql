@@ -101,7 +101,7 @@ class App extends React.Component<{}, ResultsViewState> {
 
         this.loadResults();
         break;
-      case 'showInterpretedPage':
+      case 'showInterpretedPage': {
         const tableName = msg.interpretation.data.t === 'GraphInterpretationData' ? GRAPH_TABLE_NAME : ALERTS_TABLE_NAME;
 
         this.updateStateWithNewResultsInfo({
@@ -133,6 +133,7 @@ class App extends React.Component<{}, ResultsViewState> {
         });
         this.loadResults();
         break;
+      }
       case 'resultsUpdating':
         this.setState({
           isExpectingResultsUpdate: true,

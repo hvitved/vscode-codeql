@@ -327,19 +327,19 @@ class ResultTable extends React.Component<ResultTableProps, {}> {
     switch (resultSet.t) {
       case 'RawResultSet': return <RawTable
         {...this.props} resultSet={resultSet} />;
-      case 'InterpretedResultSet':
+      case 'InterpretedResultSet': {
         const data = resultSet.interpretation.data;
-        switch (data.t)
-        {
-          case 'SarifInterpretationData' : {
-            var sarifResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
+        switch (data.t) {
+          case 'SarifInterpretationData': {
+            const sarifResultSet = { ...resultSet, interpretation: { ...resultSet.interpretation, data } };
             return <PathTable {...this.props} resultSet={sarifResultSet} />;
           }
-          case 'GraphInterpretationData' : {
-            var grapResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
+          case 'GraphInterpretationData': {
+            const grapResultSet = { ...resultSet, interpretation: { ...resultSet.interpretation, data } };
             return <Graph {...this.props} resultSet={grapResultSet} />;
           }
         }
+      }
     }
   }
 }
