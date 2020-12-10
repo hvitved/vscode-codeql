@@ -103,7 +103,7 @@ export class ResultTables
   }
 
   private getInterpretedTableName(): string {
-    return typeof this.props.interpretation?.data === 'string' ? GRAPH_TABLE_NAME : ALERTS_TABLE_NAME;
+    return this.props.interpretation?.data.t === 'GraphInterpretationData' ? GRAPH_TABLE_NAME : ALERTS_TABLE_NAME;
   }
 
   private getResultSetNames(): string[] {
@@ -329,13 +329,17 @@ class ResultTable extends React.Component<ResultTableProps, {}> {
         {...this.props} resultSet={resultSet} />;
       case 'InterpretedResultSet':
         const data = resultSet.interpretation.data;
-        if (typeof data === 'string')
+        switch (data.t)
         {
-          var grapResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
-          return <Graph {...this.props} resultSet={grapResultSet} />;
+          case 'SarifInterpretationData' : {
+            var sarifResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
+            return <PathTable {...this.props} resultSet={sarifResultSet} />;
+          }
+          case 'GraphInterpretationData' : {
+            var grapResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
+            return <Graph {...this.props} resultSet={grapResultSet} />;
+          }
         }
-        var sarifResultSet = {...resultSet, interpretation: {...resultSet.interpretation, data}};
-        return <PathTable {...this.props} resultSet={sarifResultSet} />;
     }
   }
 }

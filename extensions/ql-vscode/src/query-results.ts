@@ -6,7 +6,7 @@ import * as cli from './cli';
 import * as sarif from 'sarif';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { RawResultsSortState, SortedResultSetInfo, DatabaseInfo, QueryMetadata, InterpretedResultsSortState, ResultsPaths } from './pure/interface-types';
+import { RawResultsSortState, SortedResultSetInfo, DatabaseInfo, QueryMetadata, InterpretedResultsSortState, ResultsPaths, SarifInterpretationData, GraphInterpretationData } from './pure/interface-types';
 import { QueryHistoryConfig } from './config';
 import { QueryHistoryItemOptions } from './query-history';
 
@@ -171,10 +171,10 @@ export async function interpretSarifResults(
   metadata: QueryMetadata | undefined,
   resultsPaths: ResultsPaths,
   sourceInfo?: cli.SourceInfo
-): Promise<sarif.Log> {
+): Promise<SarifInterpretationData> {
   const { resultsPath, interpretedResultsPath } = resultsPaths;
   if (await fs.pathExists(interpretedResultsPath)) {
-    return JSON.parse(await fs.readFile(interpretedResultsPath, 'utf8'));
+    return { ...JSON.parse(await fs.readFile(interpretedResultsPath, 'utf8')), t: 'SarifInterpretationData' };
   }
   if (metadata === undefined) {
     throw new Error('Can\'t interpret results without query metadata');
@@ -206,7 +206,7 @@ export async function interpretSarifResults(
   }
 
   try {
-    return JSON.parse(output) as sarif.Log;
+    return { ...JSON.parse(output) as sarif.Log, t: 'SarifInterpretationData' };
   } catch (err) {
     throw new Error(`Parsing output of interpretation failed: ${err.stderr || err}`);
   } 
@@ -221,10 +221,11 @@ export async function interpretGraphResults(
   metadata: QueryMetadata | undefined,
   resultsPaths: ResultsPaths,
   sourceInfo?: cli.SourceInfo
-): Promise<string> {
+): Promise<GraphInterpretationData> {
   const { resultsPath, interpretedResultsPath } = resultsPaths;
   if (await fs.pathExists(interpretedResultsPath)) {
-    return await fs.readFile(interpretedResultsPath, 'utf8');
+    const dot = await fs.readFile(interpretedResultsPath, 'utf8')
+    return { dot, t: 'GraphInterpretationData' };
   }
   if (metadata === undefined) {
     throw new Error('Can\'t interpret results without query metadata');
@@ -244,7 +245,8 @@ export async function interpretGraphResults(
   await server.interpretBqrs({ kind, id }, 'dot', additionalArgs, resultsPath, interpretedResultsPath, sourceInfo);
 
   try {
-    return await fs.readFile(path.join(interpretedResultsPath, id + '.dot'), 'utf8');
+    const dot = await fs.readFile(path.join(interpretedResultsPath, id + '.dot'), 'utf8');
+    return { dot, t: 'GraphInterpretationData' };
   } catch (err) {
     throw new Error(`Reading output of interpretation failed: ${err.stderr || err}`);
   }

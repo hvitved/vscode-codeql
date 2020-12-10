@@ -1,9 +1,9 @@
 import * as React from 'react';
 import { ResultTableProps } from './result-table-utils';
-import { InterpretedResultSet } from '../pure/interface-types';
+import { InterpretedResultSet, GraphInterpretationData } from '../pure/interface-types';
 import { Graphviz } from 'graphviz-react';
 
-export type GraphProps = ResultTableProps & { resultSet: InterpretedResultSet<string> };
+export type GraphProps = ResultTableProps & { resultSet: InterpretedResultSet<GraphInterpretationData> };
 
 export class Graph extends React.Component<GraphProps> {
   constructor(props: GraphProps) {
@@ -30,7 +30,7 @@ export class Graph extends React.Component<GraphProps> {
     };
 
    return <Graphviz
-     dot={this.props.resultSet.interpretation.data}
+     dot={this.props.resultSet.interpretation.data.dot}
      options={options}
    />;
   }

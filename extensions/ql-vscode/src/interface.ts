@@ -96,7 +96,16 @@ function numInterpretedPages(interpretation: Interpretation | undefined): number
   if (!interpretation)
     return 0;
   
-  const n = typeof interpretation.data === 'string' ? 1 : interpretation.data.runs[0].results?.length || 0;
+  let n;
+  switch (interpretation.data.t) {
+    case 'GraphInterpretationData' : {
+      n = 1;
+      break;
+    }
+    case 'SarifInterpretationData' : {
+      n = interpretation.data.runs[0].results?.length || 0;
+    }
+  }
   
   return Math.ceil(n / PAGE_SIZE.getValue<number>());
 }
@@ -434,7 +443,7 @@ export class InterfaceManager extends DisposableObject {
     if (this._interpretation === undefined) {
       throw new Error('Trying to show interpreted results but interpretation was undefined');
     }
-    if (typeof this._interpretation.data !== 'string' && this._interpretation.data.runs[0].results === undefined) {
+    if (this._interpretation.data.t === 'SarifInterpretationData' && this._interpretation.data.runs[0].results === undefined) {
       throw new Error('Trying to show interpreted results but results were undefined');
     }
 
@@ -594,7 +603,8 @@ export class InterfaceManager extends DisposableObject {
     if (interp === undefined) {
       throw new Error('Tried to get interpreted results before interpretation finished');
     }
-    if (typeof interp.data === 'string')
+
+    if (interp.data.t !== 'SarifInterpretationData')
       return interp;
 
     if (interp.data.runs.length !== 1) {
@@ -687,7 +697,7 @@ export class InterfaceManager extends DisposableObject {
   ): Promise<void> {
     const { data, sourceLocationPrefix } = interpretation;
 
-    if (typeof data === 'string')
+    if (data.t !== 'SarifInterpretationData')
       return;
 
     if (!data.runs || !data.runs[0].results) {

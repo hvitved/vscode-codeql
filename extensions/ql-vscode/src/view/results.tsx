@@ -102,7 +102,7 @@ class App extends React.Component<{}, ResultsViewState> {
         this.loadResults();
         break;
       case 'showInterpretedPage':
-        const tableName = typeof msg.interpretation === 'string' ? GRAPH_TABLE_NAME : ALERTS_TABLE_NAME;
+        const tableName = msg.interpretation.data.t === 'GraphInterpretationData' ? GRAPH_TABLE_NAME : ALERTS_TABLE_NAME;
 
         this.updateStateWithNewResultsInfo({
           resultsPath: '', // FIXME: Not used for interpreted, refactor so this is not needed

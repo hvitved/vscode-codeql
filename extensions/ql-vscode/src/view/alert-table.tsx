@@ -5,7 +5,7 @@ import * as Keys from '../pure/result-keys';
 import * as octicons from './octicons';
 import { className, renderLocation, ResultTableProps, zebraStripe, selectableZebraStripe, jumpToLocation, nextSortDirection } from './result-table-utils';
 import { onNavigation, NavigationEvent } from './results';
-import { InterpretedResultSet } from '../pure/interface-types';
+import { InterpretedResultSet, SarifInterpretationData } from '../pure/interface-types';
 import {
   parseSarifPlainTextMessage,
   parseSarifLocation,
@@ -15,7 +15,7 @@ import { InterpretedResultsSortColumn, SortDirection, InterpretedResultsSortStat
 import { vscode } from './vscode-api';
 import { isWholeFileLoc, isLineColumnLoc } from '../pure/bqrs-utils';
 
-export type PathTableProps = ResultTableProps & { resultSet: InterpretedResultSet<Sarif.Log> };
+export type PathTableProps = ResultTableProps & { resultSet: InterpretedResultSet<SarifInterpretationData> };
 export interface PathTableState {
   expanded: { [k: string]: boolean };
   selectedPathNode: undefined | Keys.PathNode;

@@ -18,7 +18,7 @@ export type InterpretedResultSet<T> = {
   interpretation: InterpretationT<T>
 };
 
-export type ResultSet = RawTableResultSet | InterpretedResultSet<sarif.Log | string>;
+export type ResultSet = RawTableResultSet | InterpretedResultSet<InterpretationData>;
 
 /**
  * Only ever show this many rows in a raw result table.
@@ -45,6 +45,17 @@ export interface PreviousExecution {
   durationSeconds: number;
 }
 
+export type SarifInterpretationData = {
+  t: 'SarifInterpretationData';
+} & sarif.Log;
+
+export type GraphInterpretationData = {
+  t: 'GraphInterpretationData';
+  dot: string;
+};
+
+export type InterpretationData = SarifInterpretationData | GraphInterpretationData;
+
 export interface InterpretationT<T> {
   sourceLocationPrefix: string;
   numTruncatedResults: number;
@@ -57,7 +68,7 @@ export interface InterpretationT<T> {
   data: T;
 }
 
-export type Interpretation = InterpretationT<sarif.Log | string>;
+export type Interpretation = InterpretationT<InterpretationData>;
 
 export interface ResultsPaths {
   resultsPath: string;
