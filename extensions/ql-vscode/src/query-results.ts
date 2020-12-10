@@ -209,7 +209,7 @@ export async function interpretSarifResults(
     return { ...JSON.parse(output) as sarif.Log, t: 'SarifInterpretationData' };
   } catch (err) {
     throw new Error(`Parsing output of interpretation failed: ${err.stderr || err}`);
-  } 
+  }
 }
 
 
@@ -224,7 +224,7 @@ export async function interpretGraphResults(
 ): Promise<GraphInterpretationData> {
   const { resultsPath, interpretedResultsPath } = resultsPaths;
   if (await fs.pathExists(interpretedResultsPath)) {
-    const dot = await fs.readFile(interpretedResultsPath, 'utf8')
+    const dot = await fs.readFile(interpretedResultsPath, 'utf8');
     return { dot, t: 'GraphInterpretationData' };
   }
   if (metadata === undefined) {
@@ -240,7 +240,7 @@ export async function interpretGraphResults(
     id = 'dummy-id';
   }
 
-  const additionalArgs = ['--dot-location-url-format', 'https://github.com/github/codeql-ruby/tree/main/ql/test{path}#L{start:line}']
+  const additionalArgs = sourceInfo ? ['--dot-location-url-format', 'file://' + sourceInfo.sourceLocationPrefix + '{path}:{start:line}:{start:column}:{end:line}:{end:column}'] : [];
 
   await server.interpretBqrs({ kind, id }, 'dot', additionalArgs, resultsPath, interpretedResultsPath, sourceInfo);
 
