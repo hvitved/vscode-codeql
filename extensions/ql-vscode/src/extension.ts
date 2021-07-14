@@ -34,7 +34,8 @@ import { DatabaseUI } from './databases-ui';
 import {
   TemplateQueryDefinitionProvider,
   TemplateQueryReferenceProvider,
-  TemplatePrintAstProvider
+  TemplatePrintAstProvider,
+  TemplatePrintCfgProvider
 } from './contextual/templateProvider';
 import {
   DEFAULT_DISTRIBUTION_VERSION_RANGE,
@@ -70,6 +71,7 @@ import {
   ProgressUpdate
 } from './commandRunner';
 import { CodeQlStatusBarHandler } from './status-bar';
+import * as messages from './pure/messages';
 
 import { Credentials } from './authentication';
 import runRemoteQuery from './run-remote-query';
@@ -467,6 +469,7 @@ async function activateWithInstalledDistribution(
     selectedQuery: Uri | undefined,
     progress: ProgressCallback,
     token: CancellationToken,
+    templates?: messages.TemplateDefinitions,
   ): Promise<void> {
     if (qs !== undefined) {
       const dbItem = await databaseUI.getDatabaseItem(progress, token);
@@ -480,7 +483,8 @@ async function activateWithInstalledDistribution(
         quickEval,
         selectedQuery,
         progress,
-        token
+        token,
+        templates
       );
       const item = qhm.buildCompletedQuery(info);
       await showResultsForCompletedQuery(item, WebviewReveal.NotForced);
@@ -741,6 +745,26 @@ async function activateWithInstalledDistribution(
         void helpers.showAndLogInformationMessage(`Authenticated to GitHub as user: ${userInfo.data.login}`);
       }
     }));
+
+  ctx.subscriptions.push(
+    commandRunnerWithProgress(
+      'codeQL.viewCfg',
+      async (
+        progress: ProgressCallback,
+        token: CancellationToken
+      ) => {
+        const res = await new TemplatePrintCfgProvider(cliServer, dbm)
+          .provideCfgUri(window.activeTextEditor?.document);
+        if (res) {
+          await compileAndRunQuery(false, res[0], progress, token, res[1]);
+        }
+      },
+      {
+        title: 'Calculate CFG',
+        cancellable: true
+      }
+    )
+  );
 
   void logger.log('Starting language server.');
   ctx.subscriptions.push(client.start());
